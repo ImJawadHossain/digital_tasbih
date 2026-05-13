@@ -1,16 +1,43 @@
-# digital_tasbih
+# Digital Tasbih
 
-A new Flutter project.
+Digital Tasbih is a modern, intuitive Flutter application designed to help you keep track of your daily dhikr and prayers. It provides a digital counter, prayer times, and a beautiful user interface to enhance your spiritual journey.
+
+## Features
+
+- **Digital Counter**: Easy-to-use digital tasbih counter with vibration feedback.
+- **Prayer Times**: Accurate prayer times based on your current location.
+- **Modern UI**: A clean, distraction-free interface tailored for a premium user experience.
+- **Dynamic Attribution**: Remote configurable settings for personalized author attribution.
+- **Offline Support**: Core features work seamlessly even without an internet connection.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+To run this project locally, ensure you have Flutter installed on your machine.
 
-A few resources to get you started if this is your first Flutter project:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/ImJawadHossain/digital_tasbih.git
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd digital_tasbih
+   ```
+3. Install dependencies:
+   ```bash
+   flutter pub get
+   ```
+4. Run the application:
+   ```bash
+   flutter run
+   ```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Technologies Used
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Flutter
+- Dart
+- Location Services
+- SharedPreferences for local storage
+
+## Author
+
+Created by Jawad Hossain.
