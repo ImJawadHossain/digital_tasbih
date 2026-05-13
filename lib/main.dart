@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'screens/main_screen.dart';
 
@@ -84,10 +85,17 @@ class _AppInitializerState extends State<AppInitializer> {
   }
 
   Future<void> _checkAppStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Load cached values
+    bool isActive = prefs.getBool('is_app_active') ?? true;
+    List<String> developers = prefs.getStringList('developers') ?? ['Md Jawad Hossain'];
+    String university = prefs.getString('university') ?? 'Khulna Polytechnic Institute';
+
     try {
       if (_kGistRawUrl.contains('YOUR_GIST')) {
         // If developer hasn't set URL yet, let it pass
-        _proceed(true, ['Md Jawad Hossain'], 'Khulna Polytechnic Institute');
+        _proceed(true, developers, university);
         return;
       }
 
@@ -96,27 +104,29 @@ class _AppInitializerState extends State<AppInitializer> {
       
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        bool isActive = data['status'] == 'active';
+        isActive = data['status'] == 'active';
         
-        List<String> developers = [];
+        List<String> fetchedDevelopers = [];
         if (data.containsKey('developers') && data['developers'] is List) {
-          developers = List<String>.from(data['developers']);
+          fetchedDevelopers = List<String>.from(data['developers']);
         } else {
           // Fallback parsing if they use developer1, developer2 format
-          if (data.containsKey('developer1')) developers.add(data['developer1'].toString());
-          if (data.containsKey('developer2')) developers.add(data['developer2'].toString());
+          if (data.containsKey('developer1')) fetchedDevelopers.add(data['developer1'].toString());
+          if (data.containsKey('developer2')) fetchedDevelopers.add(data['developer2'].toString());
         }
 
-        if (developers.isEmpty) {
-          developers = ['Md Jawad Hossain']; // Absolute fallback
+        if (fetchedDevelopers.isNotEmpty) {
+          developers = fetchedDevelopers;
         }
 
-        String university = data['university']?.toString() ?? 'North Western University';
+        if (data.containsKey('university')) {
+          university = data['university'].toString();
+        }
 
-        // Add a tiny delay just so the splash screen feels smooth
-        await Future.delayed(const Duration(milliseconds: 500));
-        _proceed(isActive, developers, university);
-        return;
+        // Save to cache for next offline launch
+        await prefs.setBool('is_app_active', isActive);
+        await prefs.setStringList('developers', developers);
+        await prefs.setString('university', university);
       }
     } on FormatException catch (e) {
       // Invalid JSON syntax in the Gist
@@ -124,23 +134,13 @@ class _AppInitializerState extends State<AppInitializer> {
       _proceed(false, [], '');
       return;
     } catch (e) {
-      // Internet failed or timeout — NO CACHE fallback allowed!
-      debugPrint('Network Error: $e');
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const _NoInternetScreen(),
-          transitionDuration: const Duration(milliseconds: 500),
-          transitionsBuilder: (_, animation, __, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-        ),
-      );
-      return;
+      // Internet failed or timeout — gracefully use cache instead!
+      debugPrint('Network Error: $e - Using cached data instead');
     }
 
-    // Default error catch-all
-    _proceed(false, [], '');
+    // Add a tiny delay just so the splash screen feels smooth
+    await Future.delayed(const Duration(milliseconds: 500));
+    _proceed(isActive, developers, university);
   }
 
   void _proceed(bool isActive, List<String> developers, String university) {
